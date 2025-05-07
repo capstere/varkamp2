@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ny Tävling: Chiffer-femkamp</title>
+  <link rel="icon" href="assets/favicon.png" sizes="32x32" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Ny Tävling: Din Egna Chiffer-femkamp</h1>
+    <div id="timer">00:00</div>
+  </header>
+
+  <section id="intro">
+    <p>Välkommen! Lös fem gåtor på mobilen i rätt ordning.</p>
+    <button id="start-btn">Starta tävlingen</button>
+  </section>
+
+  <div id="puzzle-container"></div>
+
+  <section id="final" class="hidden">
+    <h2>Grattis!</h2>
+    <p>Slutlösenordet är:</p>
+    <div id="final-answer" class="answer"></div>
+    <button id="reset-btn">Återställ spel</button>
+  </section>
+
+  <audio id="audio-correct" src="audio/correct.mp3" preload="auto"></audio>
+  <audio id="audio-wrong"   src="audio/wrong.mp3"   preload="auto"></audio>
+
+  <script defer src="bundle.js"></script>
+</body>
+</html>
