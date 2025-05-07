@@ -2,8 +2,8 @@
 node_modules/
 
 # Bundlade filer & maps
-public/bundle.js
-public/bundle.js.map
+bundle.js
+bundle.js.map
 
 # Build-artifakter
 .DS_Store
