@@ -12,104 +12,100 @@ let current = 0;
 let startTime = null;
 let timerInterval = null;
 
-const introEl        = document.getElementById('intro');
-const startBtn       = document.getElementById('start-btn');
-const timerEl        = document.getElementById('timer');
-const containerEl    = document.getElementById('puzzle-container');
-const finalEl        = document.getElementById('final');
-const finalAnswerEl  = document.getElementById('final-answer');
-const resetBtn       = document.getElementById('reset-btn');
-const audioCorrect   = document.getElementById('audio-correct');
-const audioWrong     = document.getElementById('audio-wrong');
+let introEl, startBtn, timerEl, containerEl, finalEl, finalAnswerEl, resetBtn, audioCorrect, audioWrong;
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Läs av sparad progress
-  const saved = localStorage.getItem('fk-current');
+/**
+ * Den här funktionen körs när DOM är redo.
+ */
+export function initApp() {
+  // Hämta alla element
+  introEl       = document.getElementById('intro');
+  startBtn      = document.getElementById('start-btn');
+  timerEl       = document.getElementById('timer');
+  containerEl   = document.getElementById('puzzle-container');
+  finalEl       = document.getElementById('final');
+  finalAnswerEl = document.getElementById('final-answer');
+  resetBtn      = document.getElementById('reset-btn');
+  audioCorrect  = document.getElementById('audio-correct');
+  audioWrong    = document.getElementById('audio-wrong');
+
+  // Läs av eventuell sparad progress
+  const saved      = localStorage.getItem('fk-current');
   const savedStart = localStorage.getItem('fk-start');
   if (saved !== null && savedStart) {
-    current = Number(saved);
+    current   = Number(saved);
     startTime = Number(savedStart);
     startTimer();
     introEl.classList.add('hidden');
     renderPuzzle(current);
   }
-});
 
-// Startknapp
-startBtn.addEventListener('click', () => {
-  introEl.classList.add('hidden');
-  startTime = Date.now();
-  localStorage.setItem('fk-start', startTime);
-  startTimer();
-  renderPuzzle(0);
-});
+  // Startknapp
+  startBtn.addEventListener('click', () => {
+    introEl.classList.add('hidden');
+    startTime = Date.now();
+    localStorage.setItem('fk-start', startTime);
+    startTimer();
+    renderPuzzle(0);
+  });
 
-// Återställ-knapp (reset)
-resetBtn.addEventListener('click', () => {
-  localStorage.clear();
-  location.reload();
-});
+  // Reset-knapp
+  resetBtn.addEventListener('click', () => {
+    localStorage.clear();
+    location.reload();
+  });
+}
 
-// Timer
+// Timerfunktioner
 function startTimer() {
   updateTimer();
   timerInterval = setInterval(updateTimer, 500);
 }
 function updateTimer() {
   const diff = Date.now() - startTime;
-  const mm = String(Math.floor(diff / 60000)).padStart(2, '0');
-  const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+  const mm   = String(Math.floor(diff / 60000)).padStart(2, '0');
+  const ss   = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
   timerEl.textContent = `${mm}:${ss}`;
 }
 
-// Huvud-renderfunktion
+// Render-loop
 function renderPuzzle(idx) {
   localStorage.setItem('fk-current', idx);
   containerEl.innerHTML = '';
   finalEl.classList.add('hidden');
 
-  // Klara alla pussel?
+  // Alla klara?
   if (idx >= puzzles.length) {
     clearInterval(timerInterval);
-    // Beräkna slutlösenordet
-    const finalHash = sha256(
-      puzzles.map(p => p.hash).join('')
-    ).slice(0, 8);
+    const finalHash = sha256(puzzles.map(p => p.hash).join('')).slice(0, 8);
     finalAnswerEl.textContent = finalHash;
     finalEl.classList.remove('hidden');
     return;
   }
 
-  const cfg = puzzles[idx];
+  const cfg     = puzzles[idx];
   const wrapper = document.createElement('section');
   wrapper.className = 'puzzle';
 
-  // Lägg till ikon för gåtan
+  // Ikon
   const icon = document.createElement('img');
-  icon.src = `assets/puzzle-${cfg.type}.png`;
-  icon.alt = cfg.type;
+  icon.src  = `assets/puzzle-${cfg.type}.png`;
+  icon.alt  = cfg.type;
   icon.className = 'puzzle-icon';
   wrapper.appendChild(icon);
 
-  // Prompt-text
+  // Prompt
   const promptEl = document.createElement('div');
   promptEl.className = 'prompt';
   promptEl.textContent = cfg.prompt;
   wrapper.appendChild(promptEl);
 
-  // Container för input / interaktion
+  // Interaktion
   const interaction = document.createElement('div');
   interaction.className = 'interaction';
   wrapper.appendChild(interaction);
 
-  // Submit-knapp
-  const submitBtn = document.createElement('button');
-  submitBtn.textContent = 'Skicka';
-  // För QR-pusslet är input disabled tills man löst labyrinten
-  submitBtn.disabled = (cfg.type === 'qr');
-  wrapper.appendChild(submitBtn);
-
-  // Skapa rätt typ av interaktion och input
+  // Skapa rätt pussel‐modul
   let inputField;
   switch (cfg.type) {
     case 'caesar':
@@ -128,16 +124,20 @@ function renderPuzzle(idx) {
       inputField = setupMazePuzzle(interaction, cfg.params, submitBtn);
       break;
   }
-  // Om modulen inte returnerar ett input-element, lägg till textfält
+
+  // Om inget input returnerades, skapa textfält
   if (!inputField) {
     inputField = addTextInput(interaction);
     if (cfg.type === 'qr') inputField.disabled = true;
   }
 
-  // Klickhantering: jämför SHA256(answer) mot cfg.hash
+  // Skicka-knapp
+  const submitBtn = document.createElement('button');
+  submitBtn.textContent = 'Skicka';
+  submitBtn.disabled = (cfg.type === 'qr');
   submitBtn.addEventListener('click', () => {
-    const answer = (inputField.value || '').trim().toLowerCase();
-    if (sha256(answer) === cfg.hash) {
+    const ans = (inputField.value || '').trim().toLowerCase();
+    if (sha256(ans) === cfg.hash) {
       audioCorrect.play();
       wrapper.classList.add('fade-out');
       setTimeout(() => renderPuzzle(idx + 1), 500);
@@ -147,14 +147,15 @@ function renderPuzzle(idx) {
       setTimeout(() => wrapper.classList.remove('shake'), 300);
     }
   });
+  wrapper.appendChild(submitBtn);
 
   containerEl.appendChild(wrapper);
 }
 
-// Hjälp: skapa ett text-input
+// Hjälpfunktion för text‐input
 function addTextInput(parent) {
   const inp = document.createElement('input');
-  inp.type = 'text';
+  inp.type        = 'text';
   inp.placeholder = 'Ditt svar här';
   parent.appendChild(inp);
   return inp;
