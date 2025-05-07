@@ -1,0 +1,13 @@
+# Node-modules
+node_modules/
+
+# Bundlade filer & maps
+public/bundle.js
+public/bundle.js.map
+
+# Build-artifakter
+.DS_Store
+.env
+
+# Loggfiler
+*.log
