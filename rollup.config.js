@@ -8,7 +8,7 @@ import { terser } from 'rollup-plugin-terser';
 export default {
   input: 'src/js/main.js',
   output: {
-    file: 'public/bundle.js',
+    file: 'bundle.js',
     format: 'iife',
     name: 'App',
     sourcemap: true
@@ -21,7 +21,7 @@ export default {
     resolve(),
     commonjs(),
     sass({
-      output: 'public/styles.css'
+      output: 'styles.css'
     }),
     terser()
   ]
